@@ -1,92 +1,62 @@
-<div class="max-w-2xl mx-auto p-6">
-    <h1 class="text-2xl font-semibold mb-4">Focus Tasks</h1>
-
-    <form wire:submit.prevent="addTask" class="mb-6">
-        <div class="flex space-x-2">
+<div>
+    <div class="bg-white shadow sm:rounded-lg p-4 mb-4">
+        <form wire:submit.prevent="createTask" class="flex space-x-2 items-start">
             <input
                 type="text"
-                name="title"
-                wire:model.defer="title"
-                placeholder="What do you want to focus on today?"
-                class="flex-1 px-4 py-2 border rounded shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                wire:model.defer="newTaskTitle"
+                placeholder="What will you focus on?"
+                class="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
 
-            <button
-                type="submit"
-                class="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 focus:outline-none"
-            >
-                Add
-            </button>
-        </div>
+            <select wire:model.defer="newTaskPriority" class="px-3 py-2 border border-gray-300 rounded-md">
+                <option value="medium">Medium</option>
+                <option value="high">High</option>
+                <option value="low">Low</option>
+            </select>
 
-        @error('title')
-            <p class="text-red-600 mt-2 text-sm">{{ $message }}</p>
-        @enderror
-
-        <div class="mt-3">
-            <textarea
-                name="notes"
-                wire:model.defer="notes"
-                placeholder="Notes (optional)"
-                class="w-full px-4 py-2 border rounded shadow-sm mt-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                rows="3"
-            ></textarea>
-            @error('notes')
-                <p class="text-red-600 mt-2 text-sm">{{ $message }}</p>
-            @enderror
-        </div>
-    </form>
-
-    <div>
-        <h2 class="text-lg font-medium mb-3">Today's Tasks</h2>
-        <ul class="space-y-2">
-            @forelse ($tasks as $task)
-                <li class="flex items-start justify-between p-3 border rounded bg-white">
-                    <div>
-                        <div class="flex items-center space-x-3">
-                            <input
-                                type="checkbox"
-                                wire:click="toggleComplete({{ $task->id }})"
-                                {{ $task->is_completed ? 'checked' : '' }}
-                                class="h-4 w-4"
-                            />
-
-                            <span class="{{ $task->is_completed ? 'line-through text-gray-500' : 'text-gray-900' }} font-medium">{{ $task->title }}</span>
-                        </div>
-
-                        @if($task->notes)
-                            <p class="text-sm text-gray-600 mt-1">{{ $task->notes }}</p>
-                        @endif
-
-                        <p class="text-xs text-gray-400 mt-1">Added {{ $task->created_at->diffForHumans() }}</p>
-                    </div>
-
-                    <div class="flex items-center space-x-2">
-                        <button
-                            type="button"
-                            onclick="if(!confirm('Delete this task?')) event.stopImmediatePropagation();"
-                            wire:click="deleteTask({{ $task->id }})"
-                            class="text-red-600 hover:text-red-800 focus:outline-none"
-                        >
-                            Delete
-                        </button>
-                    </div>
-                </li>
-            @empty
-                <li class="p-3 text-gray-500">No tasks yet — add one above.</li>
-            @endforelse
-        </ul>
+            <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md">Add</button>
+        </form>
     </div>
 
-    <script>
-        document.addEventListener('livewire:load', function () {
-            // Focus the title input after a task is added (emit 'taskAdded' from the Livewire component after add)
-            if (window.Livewire) {
-                Livewire.on('taskAdded', function () {
-                    var el = document.querySelector('input[name="title"]');
-                    if (el) { el.focus(); }
-                });
-            }
-        });
-    </script>
+    <div class="space-y-3">
+        @forelse($tasks as $task)
+            <div class="bg-white shadow sm:rounded-lg p-4 flex items-start justify-between space-x-4">
+                <div class="flex items-start space-x-3">
+                    <button wire:click="toggleComplete({{ $task->id }})" class="mt-1">
+                        @if($task->completed)
+                            <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                        @else
+                            <svg class="w-6 h-6 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                        @endif
+                    </button>
+
+                    <div>
+                        <div class="flex items-center space-x-2">
+                            <h3 class="text-sm font-medium {{ $task->completed ? 'line-through text-gray-400' : 'text-gray-900' }}">{{ $task->title }}</h3>
+
+                            @if($task->priority === 'high')
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">High</span>
+                            @elseif($task->priority === 'medium')
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">Medium</span>
+                            @else
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Low</span>
+                            @endif
+                        </div>
+
+                        <div class="text-xs text-gray-500 mt-1">Added {{ $task->created_at->diffForHumans() }}</div>
+                    </div>
+                </div>
+
+                <div class="flex items-center space-x-2">
+                    <button wire:click="deleteTask({{ $task->id }})" class="text-sm text-red-600 hover:underline">Delete</button>
+                </div>
+            </div>
+        @empty
+            <div class="bg-white shadow sm:rounded-lg p-4 text-gray-600">No tasks found.</div>
+        @endforelse
+    </div>
+
+    <div class="mt-4">
+        {{ $tasks->links() ?? '' }}
+    </div>
 </div>

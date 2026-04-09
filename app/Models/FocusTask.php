@@ -11,10 +11,24 @@ class FocusTask extends Model
 {
     use HasFactory;
 
+    public const PRIORITY_LOW = 'low';
+    public const PRIORITY_MEDIUM = 'medium';
+    public const PRIORITY_HIGH = 'high';
+
+    public static function priorities(): array
+    {
+        return [
+            self::PRIORITY_LOW,
+            self::PRIORITY_MEDIUM,
+            self::PRIORITY_HIGH,
+        ];
+    }
+
     protected $fillable = [
         'title',
         'notes',
         'is_completed',
+        'priority',
     ];
 
     protected $casts = [
@@ -23,6 +37,7 @@ class FocusTask extends Model
 
     protected $attributes = [
         'is_completed' => false,
+        'priority' => self::PRIORITY_MEDIUM,
     ];
 
     /**
@@ -44,6 +59,23 @@ class FocusTask extends Model
         }
 
         return $query;
+    }
+
+    /**
+     * Scope to apply the sorting used by the UI:
+     * 1) incomplete tasks first
+     * 2) highest priority first (high, medium, low)
+     * 3) newest tasks first
+     */
+    public function scopeSorted(Builder $query): Builder
+    {
+        // is_completed: false (0) before true (1) -> ASC
+        // priority: order high, medium, low
+        // created_at: newest first
+        return $query
+            ->orderBy('is_completed', 'asc')
+            ->orderByRaw("FIELD(priority, '" . self::PRIORITY_HIGH . "', '" . self::PRIORITY_MEDIUM . "', '" . self::PRIORITY_LOW . "')")
+            ->orderBy('created_at', 'desc');
     }
 
     /**

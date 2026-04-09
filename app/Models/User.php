@@ -40,4 +40,14 @@ class User extends Authenticatable
     {
         return $this->hasMany(FocusTask::class);
     }
+
+    /**
+     * Get the user's focus tasks using the default UI sorting.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function focusTasksSorted(): HasMany
+    {
+        return $this->hasMany(FocusTask::class)->sorted();
+    }
 }
